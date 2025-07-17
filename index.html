@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anatomy Chatbot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif; /* Changed font */
+            background-color: #e0f2f7; /* Lighter, more aesthetic background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            max-width: 800px;
+            width: 90%; /* Make it a bit more responsive */
+            background-color: #ffffff;
+            border-radius: 15px; /* Slightly more rounded corners */
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15); /* More pronounced shadow */
+            padding: 35px;
+            box-sizing: border-box; /* Include padding in width */
+        }
+        h1 {
+            color: #0056b3; /* A standard blue for headers */
+            font-size: 3.5rem; /* Slightly larger font */
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: 700;
+            letter-spacing: 0.5px; /* Add some letter spacing */
+        }
+        .header-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .header-buttons button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        .header-buttons button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 10px;
+            position: relative;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .chat-container {
+            height: calc(100vh - 350px); /* Adjusted height for better fit */
+            min-height: 450px; /* Increased min-height */
+            background-color: #f8f9fa; /* Light grey for chat background */
+            border: 1px solid #dee2e6;
+            border-radius: 12px;
+            padding: 20px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        .message {
+            max-width: 75%;
+            margin: 12px;
+            padding: 14px 20px; /* Slightly more padding */
+            border-radius: 22px; /* More rounded message bubbles */
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            line-height: 1.6; /* Improved readability */
+            font-size: 1.05rem; /* Slightly larger message font */
+        }
+        .user-message {
+            background-color: #d1e7dd; /* Light green for user messages */
+            color: #212529;
+            margin-left: auto;
+            border-bottom-right-radius: 8px; /* Asymmetric border radius */
+        }
+        .bot-message {
+            background-color: #e9ecef; /* Light grey for bot messages */
+            color: #212529;
+            margin-right: auto;
+            border: 1px solid #ced4da;
+            border-bottom-left-radius: 8px; /* Asymmetric border radius */
+        }
+        .typing-indicator {
+            display: none;
+            padding: 10px;
+            margin: 10px;
+            border-radius: 20px;
+            background-color: #f0f0f0;
+            color: #555;
+            font-style: italic;
+            font-size: 0.9rem;
+        }
+        .typing-indicator.active {
+            display: flex;
+            align-items: center;
+        }
+        .typing-indicator .w-2 {
+            background-color: #888;
+        }
+        /* Input form and button styles */
+        #chat-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        #question-input {
+            flex-grow: 1;
+            padding: 14px 20px; /* More padding */
+            border: 1px solid #ced4da;
+            border-radius: 28px; /* More rounded input field */
+            font-size: 1.05rem;
+            box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.08);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        #question-input:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.25);
+            outline: none;
+        }
+        #chat-form button {
+            background-color: #007bff; /* Blue send button */
+            color: white;
+            padding: 14px 28px; /* More padding */
+            border: none;
+            border-radius: 28px; /* More rounded button */
+            cursor: pointer;
+            font-size: 1.05rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        #chat-form button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px); /* More noticeable hover effect */
+        }
+        /* File upload section (kept for completeness, though commented out in HTML) */
+        .upload-section {
+            margin-top: 25px;
+            padding: 20px;
+            border: 2px dashed #a7d9f7; /* Lighter dashed border */
+            border-radius: 12px;
+            background-color: #eaf7fb; /* Lighter background for upload */
+            text-align: center;
+        }
+        .upload-section label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+            display: block;
+        }
+        .upload-section input[type="file"] {
+            display: block;
+            margin: 10px auto;
+            padding: 8px;
+            border: 1px solid #80bfff;
+            border-radius: 5px;
+            background-color: #d9edff;
+        }
+        .upload-section button {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        .upload-section button:hover {
+            background-color: #218838;
+            transform: translateY(-1px);
+        }
+        .upload-message {
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: #555;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container">
+        <h1>Anatomy Chatbot</h1>
+        <div class="header-buttons">
+            <button id="about-btn">About</button>
+            <button id="donate-btn">Donate</button>
+        </div>
+        
+        <!-- Chat messages container -->
+        <div id="chat-container" class="chat-container">
+            <div class="bot-message message">
+                Hello! I'm your Anatomy Chatbot. How can I assist you with your anatomy questions today?
+            </div>
+        </div>
+
+        <!-- Typing indicator -->
+        <div id="typing-indicator" class="typing-indicator">
+            <div class="flex space-x-2">
+                <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce"></div>
+                <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                <div class="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+            </div>
+            <span>Bot is typing...</span>
+        </div>
+
+        <!-- Input form -->
+        <form id="chat-form">
+            <input 
+                type="text" 
+                id="question-input"
+                placeholder="Type your question here..."
+                required
+            >
+            <button type="submit">Send</button>
+        </form>
+
+        </div>
+    </div>
+
+    <!-- About Modal -->
+    <div id="about-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="close-about">&times;</span>
+            <h2>About This Project</h2>
+            <p>This project is a chatbot designed to help medical students learn and revise anatomy. The chatbot is trained on all three volumes of BD Chaurasia's Human Anatomy, a comprehensive and widely used textbook in the field.</p>
+            <h3>Features</h3>
+            <ul>
+                <li><strong>Interactive Chat:</strong> Engage in a conversation with the chatbot to ask questions about human anatomy.</li>
+                <li><strong>Comprehensive Knowledge Base:</strong> The chatbot's knowledge is based on all three volumes of BD Chaurasia's Human Anatomy.</li>
+                <li><strong>Powered by Cohere:</strong> Currently, the chatbot utilizes Cohere models to provide intelligent and relevant responses.</li>
+            </ul>
+            <h3>Future Development</h3>
+            <p>With sufficient support and donations, the project can be enhanced with more advanced models and features:</p>
+            <ul>
+                <li><strong>Integration of Advanced Models:</strong> Future versions may incorporate Gemini API, OpenAI models, or the Aya model for more descriptive and accurate answers.</li>
+                <li><strong>Image Support:</strong> The Aya model could enable the chatbot to provide descriptions with images, offering a more visual and engaging learning experience.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Donate Modal -->
+    <div id="donate-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" id="close-donate">&times;</span>
+            <h2>Support the Project</h2>
+            <p>This project is a personal initiative and relies on the support of the community to grow and improve. If you find this chatbot helpful, please consider making a donation to support its continued development.</p>
+            <h3>Donate</h3>
+            <p>You can donate to the project through UPI.</p>
+            <p><strong>UPI ID:</strong> <code>sajid2251@ybl</code></p>
+            <p>Your contribution, no matter how small, will be greatly appreciated and will help in incorporating the planned future improvements.</p>
+        </div>
+    </div>
+
+    <script>
+        const chatForm = document.getElementById('chat-form');
+        const questionInput = document.getElementById('question-input');
+        const chatContainer = document.getElementById('chat-container');
+        const typingIndicator = document.getElementById('typing-indicator');
+
+        // Chat submission handler
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const question = questionInput.value.trim();
+            if (!question) return;
+
+            // Add user message
+            addMessage(question, 'user');
+            questionInput.value = '';
+
+            // Show typing indicator
+            typingIndicator.classList.add('active');
+
+            try {
+                const response = await fetch('/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ question }),
+                });
+
+                const data = await response.json();
+
+                // Hide typing indicator
+                typingIndicator.classList.remove('active');
+
+                if (response.ok) {
+                    addMessage(data.answer, 'bot');
+                } else {
+                    addMessage('Sorry, I encountered an error: ' + data.error, 'bot');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                typingIndicator.classList.remove('active');
+                addMessage('Sorry, I encountered an error while processing your request.', 'bot');
+            }
+        });
+
+        // File upload handler
+        // Removed file upload handler as per user request
+        /*
+        const uploadForm = document.getElementById('upload-form');
+        const pdfUploadInput = document.getElementById('pdf-upload');
+        const uploadMessageDiv = document.getElementById('upload-message');
+
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const file = pdfUploadInput.files[0];
+            if (!file) {
+                uploadMessageDiv.textContent = 'Please select a PDF file to upload.';
+                uploadMessageDiv.style.color = 'red';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                uploadMessageDiv.textContent = 'Uploading and processing...';
+                uploadMessageDiv.style.color = 'orange';
+
+                const response = await fetch('/upload_pdf', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    uploadMessageDiv.textContent = data.message;
+                    uploadMessageDiv.style.color = 'green';
+                    // Optionally, clear the file input after successful upload
+                    pdfUploadInput.value = ''; 
+                } else {
+                    uploadMessageDiv.textContent = 'Error: ' + data.error;
+                    uploadMessageDiv.style.color = 'red';
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                uploadMessageDiv.textContent = 'An unexpected error occurred during upload.';
+                uploadMessageDiv.style.color = 'red';
+            }
+        });
+        */
+
+        function addMessage(text, sender) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', sender === 'user' ? 'user-message' : 'bot-message');
+            messageDiv.innerHTML = text;
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Modal script
+        const aboutBtn = document.getElementById('about-btn');
+        const donateBtn = document.getElementById('donate-btn');
+        const aboutModal = document.getElementById('about-modal');
+        const donateModal = document.getElementById('donate-modal');
+        const closeAbout = document.getElementById('close-about');
+        const closeDonate = document.getElementById('close-donate');
+
+        aboutBtn.onclick = () => aboutModal.style.display = 'block';
+        donateBtn.onclick = () => donateModal.style.display = 'block';
+        closeAbout.onclick = () => aboutModal.style.display = 'none';
+        closeDonate.onclick = () => donateModal.style.display = 'none';
+
+        window.onclick = (event) => {
+            if (event.target == aboutModal) {
+                aboutModal.style.display = 'none';
+            }
+            if (event.target == donateModal) {
+                donateModal.style.display = 'none';
+            }
+        }
+
+        // Focus input on load
+        questionInput.focus();
+    </script>
+</body>
+</html>
