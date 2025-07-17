@@ -24,13 +24,24 @@
             padding: 35px;
             box-sizing: border-box; /* Include padding in width */
         }
+        @keyframes glitter {
+            0% { color: #ff0000; text-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000; }
+            14% { color: #ff7f00; text-shadow: 0 0 5px #ff7f00, 0 0 10px #ff7f00; }
+            28% { color: #ffff00; text-shadow: 0 0 5px #ffff00, 0 0 10px #ffff00; }
+            42% { color: #00ff00; text-shadow: 0 0 5px #00ff00, 0 0 10px #00ff00; }
+            56% { color: #0000ff; text-shadow: 0 0 5px #0000ff, 0 0 10px #0000ff; }
+            70% { color: #4b0082; text-shadow: 0 0 5px #4b0082, 0 0 10px #4b0082; }
+            84% { color: #9400d3; text-shadow: 0 0 5px #9400d3, 0 0 10px #9400d3; }
+            100% { color: #ff0000; text-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000; }
+        }
+
         h1 {
-            color: #0056b3; /* A standard blue for headers */
             font-size: 3.5rem; /* Slightly larger font */
             margin-bottom: 30px;
             text-align: center;
             font-weight: 700;
             letter-spacing: 0.5px; /* Add some letter spacing */
+            animation: glitter 5s infinite; /* Apply glitter animation */
         }
         .header-buttons {
             display: flex;
@@ -309,13 +320,16 @@
             // Show typing indicator
             typingIndicator.classList.add('active');
 
+            // Add user message to local chat history
+            localChatHistory.push({ role: 'user', content: question });
+
             try {
                 const response = await fetch('/ask', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ question }),
+                    body: JSON.stringify({ question: question, chat_history: localChatHistory }),
                 });
 
                 const data = await response.json();
@@ -325,6 +339,8 @@
 
                 if (response.ok) {
                     addMessage(data.answer, 'bot');
+                    // Add bot message to local chat history
+                    localChatHistory.push({ role: 'bot', content: data.answer });
                 } else {
                     addMessage('Sorry, I encountered an error: ' + data.error, 'bot');
                 }
@@ -414,6 +430,9 @@
 
         // Focus input on load
         questionInput.focus();
+
+        // Initialize local chat history
+        let localChatHistory = [];
     </script>
 </body>
 </html>
