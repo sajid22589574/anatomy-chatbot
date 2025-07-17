@@ -1,0 +1,8 @@
+flask
+langchain-pinecone
+langchain-cohere
+python-dotenv
+cohere
+nltk
+pinecone
+pypdf
