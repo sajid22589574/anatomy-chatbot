@@ -21,12 +21,18 @@ except Exception as e:
     print(f"Error initializing chatbot: {str(e)}")
     chatbot = None
 
+# Global chat history for the session (for simplicity, in a real app this would be per-user)
+chat_history = []
+
 @app.route('/')
 def home():
+    global chat_history
+    chat_history = [] # Clear chat history on page load
     return render_template('index.html')
 
 @app.route('/ask', methods=['POST'])
 def ask():
+    global chat_history
     if not chatbot:
         return jsonify({'error': 'Chatbot not initialized properly'}), 500
     
@@ -35,7 +41,13 @@ def ask():
         if not question:
             return jsonify({'error': 'No question provided'}), 400
         
-        answer = chatbot.ask(question)
+        # Pass the current chat history to the chatbot's ask method
+        answer = chatbot.ask(question, chat_history)
+        
+        # Update chat history with the new question and answer
+        chat_history.append({"role": "user", "content": question})
+        chat_history.append({"role": "bot", "content": answer})
+
         return jsonify({'answer': answer})
     except Exception as e:
         logging.error(f"Error processing question: {str(e)}")
@@ -71,4 +83,5 @@ def upload_pdf():
         return jsonify({'error': 'Invalid file type. Please upload a PDF file.'}), 400
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    # Running in production mode, disable debug and reloader for stability
+    app.run(debug=False, use_reloader=False, port=5000)

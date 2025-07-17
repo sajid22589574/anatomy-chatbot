@@ -3,15 +3,16 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 # Import Gemini specific classes
 from langchain_cohere import CohereEmbeddings, ChatCohere
 from langchain_pinecone import Pinecone as LangchainPinecone
-from langchain.chains import RetrievalQA, create_retrieval_chain
+from langchain.chains import RetrievalQA, create_retrieval_chain, create_history_aware_retriever
 from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder, PromptTemplate
+from langchain_core.messages import HumanMessage, AIMessage
 from pinecone import Pinecone
 import os
 import logging
 import time
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 from dotenv import load_dotenv
 import nltk
 from nltk.corpus import wordnet, stopwords
@@ -164,26 +165,9 @@ class RAGChatbot:
             raise
 
     def _setup_qa_chains(self):
-        """Initialize QA chain with Cohere LLM."""
+        """Initialize QA chain with Cohere LLM and history-aware retriever."""
         start_time = time.time()
         try:
-            # Define the system prompt with very explicit formatting instructions
-            SYSTEM_PROMPT = """
-You are a specialized RAG assistant for BD Chaurasia's Human Anatomy. Your task is to answer questions based *only* on the provided context.
-Provide a detailed and comprehensive answer based on the following context:
-{context}
-"""
-            # Create a custom prompt template for the chat model
-            prompt = ChatPromptTemplate.from_messages([
-                ("system", SYSTEM_PROMPT),
-                ("human", "{input}")
-            ])
-
-            # Create a prompt for formatting each retrieved document to include metadata
-            document_prompt = PromptTemplate.from_template(
-                "Source: {source}, Page: {page}\\n\\n{page_content}"
-            )
-
             # Initialize Cohere LLM
             self.cohere_llm = ChatCohere(
                 model="command-r-plus",
@@ -195,24 +179,54 @@ Provide a detailed and comprehensive answer based on the following context:
                 search_type="similarity",
                 search_kwargs={"k": 10}
             )
-            
-            # Build the document chain with the document_prompt
-            doc_chain = create_stuff_documents_chain(
-                llm=self.cohere_llm, 
-                prompt=prompt,
-                document_prompt=document_prompt
+
+            # Contextualize question prompt
+            contextualize_q_system_prompt = """Given a chat history and the latest user question \
+            which might reference context in the chat history, formulate a standalone question \
+            which can be understood without the chat history. Do NOT answer the question, \
+            just reformulate it if necessary and otherwise return it as is."""
+            contextualize_q_prompt = ChatPromptTemplate.from_messages(
+                [
+                    ("system", contextualize_q_system_prompt),
+                    MessagesPlaceholder("chat_history"),
+                    ("human", "{input}"),
+                ]
+            )
+            self.history_aware_retriever = create_history_aware_retriever(
+                self.cohere_llm, self.retriever, contextualize_q_prompt
+            )
+
+            # Answer question prompt
+            qa_system_prompt = """You are a specialized RAG assistant for BD Chaurasia's Human Anatomy. \
+            Your task is to answer questions based *only* on the provided context.
+            Provide a detailed and comprehensive answer based on the following context:
+            {context}"""
+            qa_prompt = ChatPromptTemplate.from_messages(
+                [
+                    ("system", qa_system_prompt),
+                    MessagesPlaceholder("chat_history"),
+                    ("human", "{input}"),
+                ]
+            )
+
+            # Create a prompt for formatting each retrieved document to include metadata
+            document_prompt = PromptTemplate.from_template(
+                "Source: {source}, Page: {page}\\n\\n{page_content}"
             )
             
-            from langchain_core.runnables import RunnablePassthrough
-
-            self.qa_chain = create_retrieval_chain(self.retriever, doc_chain)
-            logger.info("QA chain initialized with revised detailed formatting.")
+            # Build the document chain with the document_prompt
+            question_answer_chain = create_stuff_documents_chain(
+                self.cohere_llm, qa_prompt, document_prompt=document_prompt
+            )
+            
+            self.qa_chain = create_retrieval_chain(self.history_aware_retriever, question_answer_chain)
+            logger.info("QA chain initialized with history-aware retriever and detailed formatting.")
             
         except Exception as e:
             logger.error(f"Error setting up QA chain: {str(e)}")
             raise
 
-    def ask(self, question: str) -> str:
+    def ask(self, question: str, chat_history: Optional[List[dict]] = None) -> str:
         """
         Ask a question, get a JSON response from the model, and format it.
         """
@@ -220,8 +234,17 @@ Provide a detailed and comprehensive answer based on the following context:
         try:
             logger.info(f"Asking question: {question}")
 
+            # Convert chat_history from list of dicts to Langchain message objects
+            lc_chat_history = []
+            if chat_history:
+                for msg in chat_history:
+                    if msg['role'] == 'user':
+                        lc_chat_history.append(HumanMessage(content=msg['content']))
+                    elif msg['role'] == 'bot':
+                        lc_chat_history.append(AIMessage(content=msg['content']))
+
             # Get the raw JSON response from the model
-            response = self.qa_chain.invoke({"input": question})
+            response = self.qa_chain.invoke({"input": question, "chat_history": lc_chat_history})
             raw_answer = response['answer']
             logger.info(f"Raw model response: {raw_answer}")
 
