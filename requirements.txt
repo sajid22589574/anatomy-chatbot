@@ -4,6 +4,7 @@ langchain-text-splitters
 langchain-cohere==0.1.0
 langchain-core
 pinecone-client
+langchain-pinecone
 python-dotenv
 nltk
 gunicorn
