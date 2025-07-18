@@ -10,4 +10,4 @@ nltk
 gunicorn
 unstructured
 pypdf
-cohere
+cohere==5.1.4
