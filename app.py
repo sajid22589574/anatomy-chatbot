@@ -30,6 +30,8 @@ def home():
     chat_history = [] # Clear chat history on page load
     return render_template('index.html')
 
+from flask import Response
+
 @app.route('/ask', methods=['POST'])
 def ask():
     global chat_history
@@ -41,14 +43,18 @@ def ask():
         if not question:
             return jsonify({'error': 'No question provided'}), 400
         
-        # Pass the current chat history to the chatbot's ask method
-        answer = chatbot.ask(question, chat_history)
+        def generate():
+            full_response = ""
+            for chunk in chatbot.ask_stream(question, chat_history):
+                full_response += chunk
+                yield chunk.replace('\n', '<br>')
         
-        # Update chat history with the new question and answer
-        chat_history.append({"role": "user", "content": question})
-        chat_history.append({"role": "bot", "content": answer})
+            # Update chat history once after the full response is generated
+            chat_history.append({"role": "user", "content": question})
+            chat_history.append({"role": "bot", "content": full_response})
 
-        return jsonify({'answer': answer})
+        return Response(generate(), mimetype='text/plain')
+
     except Exception as e:
         logging.error(f"Error processing question: {str(e)}")
         return jsonify({'error': str(e)}), 500

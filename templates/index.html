@@ -3,198 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anatomy Assistant - RAG Chatbot</title>
+    <title>Anatomy Chatbot</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
-<body>
-    <div class="chatbot-container">
-        <!-- Header -->
-        <div class="chatbot-header">
-            <div class="header-content">
-                <div class="avatar-section">
-                    <div class="chatbot-avatar">
-                        <i class="fas fa-brain"></i>
-                    </div>
-                    <div class="chatbot-info">
-                        <h2>Anatomy Assistant</h2>
-                        <p class="status">Your Comprehensive Anatomy Expert</p>
-                    </div>
+<body class="dark-mode">
+
+    <div class="app-layout">
+        
+        <!-- Main Chat Interface -->
+        <div class="chatbot-container">
+            <header class="chatbot-header">
+                <h1>Anatomy Chatbot</h1>
+                <button id="panel-toggle-btn" aria-label="Toggle control panel"><i class="fas fa-bars"></i></button>
+            </header>
+            
+            <div class="chat-window" id="chat-window">
+                <div class="message bot-message">
+                    <p>Hello! I'm your anatomy assistant. Select a topic from the control panel or ask me a question.</p>
                 </div>
-                <div class="header-actions">
-                    <button class="minimize-btn"><i class="fas fa-minus"></i></button>
-                    <button class="close-btn"><i class="fas fa-times"></i></button>
+            </div>
+
+            <footer class="chat-input-area">
+                <input type="text" id="user-input" placeholder="Type your message here..." aria-label="Chat input">
+                <button id="send-btn" aria-label="Send message"><i class="fas fa-paper-plane"></i></button>
+            </footer>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <div class="control-section settings-panel">
+                <h2>Settings</h2>
+                <div class="settings">
+                    <button id="theme-toggle-btn" aria-label="Toggle theme"><i class="fas fa-sun"></i></button>
+                    <button id="font-size-increase-btn" aria-label="Increase font size">A+</button>
+                    <button id="font-size-decrease-btn" aria-label="Decrease font size">A-</button>
+                </div>
+            </div>
+
+            <div class="control-section topic-suggestions">
+                <h2>Suggested Topics</h2>
+                <div id="topic-cards-container" class="topic-cards-container">
+                    <!-- Topic cards will be dynamically inserted here -->
+                </div>
+            </div>
+
+            <div id="favorites-panel" class="control-section favorites-panel">
+                <h2><i class="fas fa-star"></i> Favorite Topics</h2>
+                <ul id="favorites-list">
+                    <!-- Favorite topics will be listed here -->
+                </ul>
+            </div>
+
+            <!-- About Me Section -->
+            <div class="control-section about-me-panel">
+                <h2>About Me</h2>
+                <div class="about-me-content">
+                    <p>Hi! I'm a passionate developer and medical education enthusiast who created this anatomy chatbot to help medical students worldwide.</p>
+                    <p>This project combines my expertise in software development with a deep commitment to medical education. The goal is to create a reliable, comprehensive study companion that can assist students in their anatomy journey using one of the most trusted textbooks in the field - BD Chaurasia's Human Anatomy.</p>
+                    <h3>Mission</h3>
+                    <p>To democratize medical education by providing free, AI-powered learning tools that help students understand complex anatomical concepts more effectively.</p>
+                    <h3>Vision</h3>
+                    <p>To build a comprehensive medical education platform that goes beyond anatomy, eventually covering all major medical subjects with interactive AI assistance.</p>
+                </div>
+            </div>
+
+            <!-- Donation Section -->
+            <div class="control-section donation-panel">
+                <h2>Donation</h2>
+                <div class="donation-content">
+                    <p>Your support can make a real difference in medical education! This project is entirely self-funded, and your contributions help cover:</p>
+                    <ul>
+                        <li><strong>API Costs:</strong> Cohere and other AI model usage fees</li>
+                        <li><strong>Server Hosting:</strong> Keeping the chatbot online 24/7</li>
+                        <li><strong>Development Time:</strong> Continuous improvements and new features</li>
+                        <li><strong>Future Expansions:</strong> Adding more subjects and advanced features</li>
+                    </ul>
+                    <h3>💝 How to Donate</h3>
+                    <p><strong>UPI ID:</strong> <code>sajid2251@ybl</code></p>
+                    <p>Every contribution, no matter how small, directly impacts medical students worldwide. Your generosity helps keep this educational resource free and continuously improving.</p>
+                    <p><strong>Thank you for supporting medical education!</strong> 🙏</p>
                 </div>
             </div>
         </div>
 
-        <!-- Messages Container -->
-        <div class="messages-container" id="messagesContainer">
-            <div class="welcome-message">
-                <div class="bot-message">
-                    <div class="message-avatar">
-                        <i class="fas fa-microscope"></i>
-                    </div>
-                    <div class="message-content">
-                        <p>Welcome to the Anatomy Assistant! Ask me anything about the human body.</p>
-                        <span class="timestamp">Just now</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Input Section -->
-        <div class="input-section">
-            <div class="quick-questions">
-                <button class="quick-btn" data-question="Tell me about the Skeletal System.">
-                    <i class="fas fa-bone"></i> Skeletal System
-                </button>
-                <button class="quick-btn" data-question="Explain the Digestive System.">
-                    <i class="fas fa-stomach"></i> Digestive System
-                </button>
-                <button class="quick-btn" data-question="Describe the Nervous System.">
-                    <i class="fas fa-brain"></i> Nervous System
-                </button>
-            </div>
-            <div class="input-container">
-                <div class="input-wrapper">
-                    <textarea 
-                        id="messageInput" 
-                        placeholder="Ask any anatomy question..."
-                        rows="1"
-                    ></textarea>
-                    <button id="sendButton" class="send-button">
-                        <i class="fas fa-paper-plane"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
     </div>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const messageInput = document.getElementById('messageInput');
-            const sendButton = document.getElementById('sendButton');
-            const messagesContainer = document.getElementById('messagesContainer');
-            const quickButtons = document.querySelectorAll('.quick-btn');
 
-            const addUserMessage = (message) => {
-                const userMessageHTML = `
-                    <div class="user-message">
-                        <div class="message-content">
-                            <p>${message}</p>
-                            <span class="timestamp">Just now</span>
-                        </div>
-                        <div class="message-avatar">
-                            <i class="fas fa-user"></i>
-                        </div>
-                    </div>
-                `;
-                messagesContainer.innerHTML += userMessageHTML;
-                scrollToBottom();
-            };
-
-            const addBotMessage = (message) => {
-                const botMessageHTML = `
-                    <div class="bot-message">
-                        <div class="message-avatar">
-                            <i class="fas fa-microscope"></i>
-                        </div>
-                        <div class="message-content">
-                            <p>${message}</p>
-                            <span class="timestamp">Just now</span>
-                        </div>
-                    </div>
-                `;
-                messagesContainer.innerHTML += botMessageHTML;
-                scrollToBottom();
-            };
-
-            const showTypingIndicator = () => {
-                const typingIndicatorHTML = `
-                    <div class="bot-message typing-indicator">
-                        <div class="message-avatar">
-                            <i class="fas fa-microscope"></i>
-                        </div>
-                        <div class="message-content">
-                            <div class="typing-dots">
-                                <span class="dot"></span>
-                                <span class="dot"></span>
-                                <span class="dot"></span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                messagesContainer.innerHTML += typingIndicatorHTML;
-                scrollToBottom();
-            };
-
-            const removeTypingIndicator = () => {
-                const typingIndicator = document.querySelector('.typing-indicator');
-                if (typingIndicator) {
-                    typingIndicator.remove();
-                }
-            };
-
-            const scrollToBottom = () => {
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            };
-
-            const sendMessage = async () => {
-                const message = messageInput.value.trim();
-                if (!message) return;
-
-                addUserMessage(message);
-                messageInput.value = '';
-                messageInput.style.height = 'auto';
-
-                showTypingIndicator();
-
-                try {
-                    const response = await fetch('/ask', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ question: message, chat_history: [] }), // Simplified history for now
-                    });
-
-                    removeTypingIndicator();
-                    const data = await response.json();
-
-                    if (response.ok) {
-                        addBotMessage(data.answer);
-                    } else {
-                        addBotMessage('Sorry, I encountered an error: ' + data.error);
-                    }
-                } catch (error) {
-                    removeTypingIndicator();
-                    console.error('Error:', error);
-                    addBotMessage('Sorry, I encountered an error while processing your request.');
-                }
-            };
-
-            sendButton.addEventListener('click', sendMessage);
-            messageInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage();
-                }
-            });
-
-            quickButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    const question = button.getAttribute('data-question');
-                    messageInput.value = question;
-                    sendMessage();
-                });
-            });
-
-            messageInput.addEventListener('input', () => {
-                messageInput.style.height = 'auto';
-                messageInput.style.height = (messageInput.scrollHeight) + 'px';
-            });
-        });
-    </script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>

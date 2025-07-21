@@ -181,10 +181,10 @@ class RAGChatbot:
             )
 
             # Contextualize question prompt
-            contextualize_q_system_prompt = """Given a chat history and the latest user question \
-            which might reference context in the chat history, formulate a standalone question \
-            which can be understood without the chat history. Do NOT answer the question, \
-            just reformulate it if necessary and otherwise return it as is."""
+            contextualize_q_system_prompt = """Given the following conversation and a follow-up question,
+            rephrase the follow-up question to be a standalone question.
+            If the follow-up question is already a standalone question, return it as is.
+            Do NOT answer the question, just rephrase it if necessary."""
             contextualize_q_prompt = ChatPromptTemplate.from_messages(
                 [
                     ("system", contextualize_q_system_prompt),
@@ -197,9 +197,16 @@ class RAGChatbot:
             )
 
             # Answer question prompt
-            qa_system_prompt = """You are a specialized RAG assistant for BD Chaurasia's Human Anatomy. \
-            Your task is to answer questions based *only* on the provided context.
-            Provide a detailed and comprehensive answer based on the following context:
+            qa_system_prompt = """You are a highly specialized and knowledgeable RAG assistant for BD Chaurasia's Human Anatomy.
+            Your primary task is to provide accurate, detailed, and comprehensive answers *strictly* based on the provided context.
+
+            **Instructions:**
+            1.  **Answer only from context:** If the answer to the question is not found within the provided context, state clearly that you cannot find the information in the provided documents. Do NOT make up answers.
+            2.  **Be comprehensive and detailed:** Provide as much relevant detail as possible from the context to fully address the user's query.
+            3.  **Maintain clarity and conciseness:** While being detailed, ensure your answers are easy to understand and avoid unnecessary jargon where simpler terms suffice.
+            4.  **Cite sources (if applicable):** If the context includes source information (e.g., page numbers), incorporate them into your answer.
+
+            **Context:**
             {context}"""
             qa_prompt = ChatPromptTemplate.from_messages(
                 [
@@ -256,6 +263,24 @@ class RAGChatbot:
         except Exception as e:
             logger.error(f"Error generating response: {str(e)}")
             raise
+
+    def ask_stream(self, question: str, chat_history: Optional[List[dict]] = None):
+        """
+        Ask a question and stream the response.
+        """
+        logger.info(f"Streaming question: {question}")
+        lc_chat_history = []
+        if chat_history:
+            for msg in chat_history:
+                if msg['role'] == 'user':
+                    lc_chat_history.append(HumanMessage(content=msg['content']))
+                elif msg['role'] == 'bot':
+                    lc_chat_history.append(AIMessage(content=msg['content']))
+        
+        # Use the stream method to get a generator
+        for chunk in self.qa_chain.stream({"input": question, "chat_history": lc_chat_history}):
+            if 'answer' in chunk:
+                yield chunk['answer'].replace('*', '')
 
     def get_synonyms(self, word):
         """
