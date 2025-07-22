@@ -100,6 +100,23 @@ body {
     border-radius: 50%;
     cursor: pointer;
     font-size: 1.2em;
+    display: none; /* Hidden by default on desktop */
+}
+
+.close-panel-btn {
+    background: none;
+    border: 1px solid;
+    color: inherit;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.2em;
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 1001; /* Ensure it's above other content in the panel */
+    display: none; /* Hidden by default on desktop */
 }
 
 .control-section {
@@ -361,19 +378,34 @@ body.light-mode .favorite-btn .fas { color: #f7b928; }
 @media (max-width: 900px) {
     .app-layout {
         flex-direction: column;
-        height: 100vh; /* Ensure full height on mobile */
+        height: 100vh;
     }
     .chatbot-container {
-        padding: 15px; /* Slightly less padding on mobile */
+        padding: 15px;
+        flex-grow: 1; /* Allow chat container to take available space */
+        display: flex;
+        flex-direction: column;
+    }
+    .chatbot-header {
+        position: relative; /* For positioning the toggle button */
     }
     .chatbot-header h1 {
-        font-size: 1.5em; /* Smaller header on mobile */
+        font-size: 1.5em;
+    }
+    .chat-window {
+        flex-grow: 1; /* Allow chat window to expand */
+        overflow-y: auto;
+        padding-bottom: 15px; /* Space above input area */
     }
     .chat-input-area {
-        padding-top: 15px; /* Adjust padding */
+        padding-top: 15px;
+        position: sticky; /* Keep input at bottom */
+        bottom: 0;
+        background-color: inherit; /* Match body background */
+        z-index: 10; /* Ensure it's above chat messages */
     }
     #user-input {
-        padding: 12px; /* Smaller input field */
+        padding: 12px;
         font-size: 0.95em;
     }
     #send-btn {
@@ -384,31 +416,39 @@ body.light-mode .favorite-btn .fas { color: #f7b928; }
 
     .control-panel {
         width: 100%;
-        height: 100vh; /* Full height when open */
-        position: fixed; /* Overlay content */
+        height: 100vh;
+        position: fixed;
         top: 0;
         right: 0;
-        z-index: 1000; /* Bring to front */
-        transform: translateX(100%); /* Hide by default */
+        z-index: 1000;
+        transform: translateX(100%); /* Hidden by default */
         transition: transform 0.4s ease-in-out;
         border-left: none;
         border-top: none;
-        box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2); /* Add shadow */
+        box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
     }
 
     .control-panel.hidden {
-        transform: translateX(100%); /* Hide by moving off-screen */
+        transform: translateX(100%); /* Explicitly hide */
     }
 
     .control-panel:not(.hidden) {
-        transform: translateX(0); /* Show by moving to original position */
+        transform: translateX(0); /* Explicitly show */
     }
 
     body.dark-mode .control-panel { background-color: #010409; }
     body.light-mode .control-panel { background-color: #ffffff; }
 
     #panel-toggle-btn {
-        display: block; /* Ensure toggle button is visible on mobile */
+        display: block; /* Show toggle button on mobile */
+        position: absolute; /* Position relative to header */
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+    }
+
+    .close-panel-btn {
+        display: block; /* Show close button on mobile when panel is open */
     }
 }
 

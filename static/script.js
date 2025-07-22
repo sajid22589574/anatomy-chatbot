@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const fontDecBtn = document.getElementById('font-size-decrease-btn');
     const favoritesList = document.getElementById('favorites-list');
     const panelToggleBtn = document.getElementById('panel-toggle-btn');
+    const closePanelBtn = document.getElementById('close-panel-btn'); // New
     const controlPanel = document.querySelector('.control-panel');
 
     let currentFontSize = 14;
@@ -232,9 +233,11 @@ document.addEventListener('DOMContentLoaded', () => {
     fontIncBtn.addEventListener('click', () => changeFontSize(1));
     fontDecBtn.addEventListener('click', () => changeFontSize(-1));
     panelToggleBtn.addEventListener('click', () => {
-        controlPanel.classList.toggle('hidden');
-        // Optionally, add an overlay to the main chat window when panel is open
-        // This would require adding an overlay element in index.html and styling it
+        controlPanel.classList.remove('hidden'); // Show panel
+    });
+
+    closePanelBtn.addEventListener('click', () => { // New event listener
+        controlPanel.classList.add('hidden'); // Hide panel
     });
 
     // --- Initialization ---
