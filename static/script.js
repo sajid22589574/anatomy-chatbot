@@ -1,63 +1,87 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const topics = [
-        { name: 'Skeletal System', icon: 'fa-bone', description: 'The framework of the body.' },
-        { name: 'Digestive System', icon: 'fa-stomach', description: 'Processes food and absorbs nutrients.' },
-        { name: 'Nervous System', icon: 'fa-brain', description: 'Transmits nerve impulses.' },
-        { name: 'Cardiovascular System', icon: 'fa-heartbeat', description: 'Circulates blood.' },
-        { name: 'Respiratory System', icon: 'fa-lungs', description: 'Manages breathing.' },
-        { name: 'Muscular System', icon: 'fa-dumbbell', description: 'Enables movement.' },
-        { name: 'Endocrine System', icon: 'fa-dna', description: 'Produces hormones.' },
-        { name: 'Reproductive System', icon: 'fa-venus-mars', description: 'Organs for reproduction.' },
-        { name: 'Integumentary System', icon: 'fa-tshirt', description: 'Skin, hair, and nails.' },
-        { name: 'Lymphatic System', icon: 'fa-shield-alt', description: 'Part of the immune system.' },
-        { name: 'Urinary System', icon: 'fa-toilet', description: 'Produces and excretes urine.' }
-    ];
-
-    const topicCardsContainer = document.getElementById('topic-cards-container');
-    const chatWindow = document.getElementById('chat-window');
-    const userInput = document.getElementById('user-input');
-    const sendBtn = document.getElementById('send-btn');
+    const controlPanel = document.querySelector('.control-panel');
+    const openPanelBtn = document.getElementById('open-panel-btn');
+    const closePanelBtn = document.getElementById('close-panel-btn');
     const themeToggleBtn = document.getElementById('theme-toggle-btn');
     const fontIncBtn = document.getElementById('font-size-increase-btn');
     const fontDecBtn = document.getElementById('font-size-decrease-btn');
+    const clearHistoryBtn = document.getElementById('clear-history-btn');
+    const topicCardsContainer = document.getElementById('topic-cards-container');
     const favoritesList = document.getElementById('favorites-list');
-    const openPanelBtn = document.getElementById('open-panel-btn'); // Renamed from panelToggleBtn
-    const closePanelBtn = document.getElementById('close-panel-btn'); // New close button
-    const controlPanel = document.querySelector('.control-panel');
+    const chatWindow = document.getElementById('chat-window');
+    const userInput = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+    
+    let currentFontSize = 16;
+    const favorites = JSON.parse(localStorage.getItem('anatomyFavorites')) || [];
 
-    let currentFontSize = 14;
-    let favorites = JSON.parse(localStorage.getItem('anatomyFavorites')) || [];
+    const topics = {
+        "Upper Limb & Thorax": [
+            { name: 'Bones of Upper Limb', icon: 'fa-bone' },
+            { name: 'Pectoral Region', icon: 'fa-male' },
+            { name: 'Scapular Region', icon: 'fa-male' },
+            { name: 'Axilla', icon: 'fa-male' },
+            { name: 'Arm', icon: 'fa-male' },
+            { name: 'Forearm and Hand', icon: 'fa-hand-paper' },
+            { name: 'Joints of Upper Limb', icon: 'fa-joint' },
+            { name: 'Wall of Thorax', icon: 'fa-male' },
+            { name: 'Thoracic Cavity', icon: 'fa-male' },
+        ],
+        "Abdomen & Lower Limb": [
+            { name: 'Anterior Abdominal Wall', icon: 'fa-male' },
+            { name: 'Abdominal Cavity', icon: 'fa-male' },
+            { name: 'Pelvis', icon: 'fa-male' },
+            { name: 'Perineum', icon: 'fa-male' },
+            { name: 'Bones of Lower Limb', icon: 'fa-bone' },
+            { name: 'Thigh', icon: 'fa-male' },
+            { name: 'Leg and Foot', icon: 'fa-shoe-prints' },
+            { name: 'Joints of Lower Limb', icon: 'fa-joint' },
+        ],
+        "Head, Neck & Brain": [
+            { name: 'Head and Neck', icon: 'fa-male' },
+            { name: 'Cranial Nerves', icon: 'fa-brain' },
+            { name: 'Brain', icon: 'fa-brain' },
+            { name: 'Eyeball', icon: 'fa-eye' },
+            { name: 'Ear', icon: 'fa-ear-listen' },
+        ]
+    };
 
-    // --- Topic Management ---
-    function getRandomTopics(count) {
-        const shuffled = [...topics].sort(() => 0.5 - Math.random());
-        return shuffled.slice(0, count);
-    }
+    const topicSearch = document.getElementById('topic-search');
 
-    function displayTopics() {
-        const selectedTopics = getRandomTopics(3);
+    function displayTopics(filter = '') {
+        const normalizedFilter = filter.toLowerCase();
         topicCardsContainer.innerHTML = '';
-        selectedTopics.forEach(topic => {
-            const card = document.createElement('div');
-            card.className = 'topic-card';
-            card.innerHTML = `
-                <i class="fas ${topic.icon}"></i>
-                <h3>${topic.name}</h3>
-                <button class="favorite-btn" data-topic="${topic.name}" aria-label="Add to favorites">
-                    <i class="far fa-star"></i>
-                </button>
-            `;
-            card.addEventListener('click', () => selectTopic(topic.name));
-            topicCardsContainer.appendChild(card);
-        });
-        
-        document.querySelectorAll('.favorite-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation(); // Prevent card click event from firing
-                toggleFavorite(btn.dataset.topic, btn.querySelector('i'));
-            });
-        });
+        for (const category in topics) {
+            const filteredTopics = topics[category].filter(topic => topic.name.toLowerCase().includes(normalizedFilter));
+            if (filteredTopics.length > 0) {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'topic-category';
+                categoryDiv.innerHTML = `<h3>${category}</h3>`;
+                const cardsDiv = document.createElement('div');
+                cardsDiv.className = 'topic-cards';
+                filteredTopics.forEach(topic => {
+                    const card = document.createElement('div');
+                    card.className = 'topic-card';
+                    card.innerHTML = `
+                        <i class="fas ${topic.icon}"></i>
+                        <h4>${topic.name}</h4>
+                        <button class="favorite-btn" data-topic="${topic.name}" aria-label="Add to favorites">
+                            <i class="far fa-star"></i>
+                        </button>
+                    `;
+                    card.addEventListener('click', () => selectTopic(topic.name));
+                    cardsDiv.appendChild(card);
+                });
+                categoryDiv.appendChild(cardsDiv);
+                topicCardsContainer.appendChild(categoryDiv);
+            }
+        }
+        updateAllStarIcons();
     }
+
+    topicSearch.addEventListener('input', (e) => {
+        displayTopics(e.target.value);
+    });
 
     function selectTopic(topicName) {
         addMessage(topicName, 'user');
@@ -65,13 +89,49 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Chat Functionality ---
+    let chatHistory = [];
+
     function addMessage(text, sender) {
         const messageElem = document.createElement('div');
         messageElem.className = `message ${sender}-message`;
         messageElem.innerHTML = `<p>${text}</p>`;
         chatWindow.appendChild(messageElem);
         chatWindow.scrollTop = chatWindow.scrollHeight;
+        if (sender !== 'bot-initial') {
+            chatHistory.push({ text, sender });
+            saveChatHistory();
+        }
     }
+
+    function saveChatHistory() {
+        localStorage.setItem('anatomyChatHistory', JSON.stringify(chatHistory));
+    }
+
+    function loadChatHistory() {
+        const savedHistory = localStorage.getItem('anatomyChatHistory');
+        if (savedHistory) {
+            chatHistory = JSON.parse(savedHistory);
+            chatWindow.innerHTML = '';
+            chatHistory.forEach(message => {
+                const messageElem = document.createElement('div');
+                messageElem.className = `message ${message.sender}-message`;
+                messageElem.innerHTML = `<p>${message.text}</p>`;
+                chatWindow.appendChild(messageElem);
+            });
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        } else {
+            addMessage("Hello! I'm your anatomy assistant. Select a topic from the control panel or ask me a question.", 'bot-initial');
+        }
+    }
+
+    function clearChatHistory() {
+        chatHistory = [];
+        localStorage.removeItem('anatomyChatHistory');
+        chatWindow.innerHTML = '';
+        addMessage("Hello! I'm your anatomy assistant. Select a topic from the control panel or ask me a question.", 'bot-initial');
+    }
+
+    clearHistoryBtn.addEventListener('click', clearChatHistory);
 
     function handleUserInput() {
         const text = userInput.value.trim();
@@ -237,12 +297,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     closePanelBtn.addEventListener('click', () => {
-        controlPanel.classList.add('hidden'); // Hide panel
+        controlPanel.classList.add('hidden');
     });
 
     // --- Initialization ---
     displayTopics();
-    setInterval(displayTopics, 30000); // Refresh topics every 30 seconds
+    loadChatHistory();
     loadPreferences();
     updateAllStarIcons();
 });

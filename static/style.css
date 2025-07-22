@@ -85,7 +85,6 @@ body {
     overflow-y: auto;
     height: 100vh;
     transition: transform 0.4s ease-in-out;
-    transform: translateX(0);
 }
 
 .control-panel.hidden {
@@ -134,6 +133,15 @@ body {
     border-radius: 15px;
 }
 
+#topic-search {
+    width: 100%;
+    padding: 12px;
+    border-radius: 20px;
+    border: 1px solid;
+    font-size: 1em;
+    margin-bottom: 15px;
+}
+
 .control-section h2 {
     margin-top: 0;
     margin-bottom: 15px;
@@ -156,11 +164,21 @@ body {
     border: 1px solid;
 }
 
-.topic-cards-container {
+.topic-category {
+    margin-bottom: 20px;
+}
+
+.topic-category h3 {
+    font-size: 1.1em;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid;
+}
+
+.topic-cards {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
-    justify-content: center;
 }
 
 .topic-card {
