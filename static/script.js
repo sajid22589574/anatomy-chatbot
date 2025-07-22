@@ -21,8 +21,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const fontIncBtn = document.getElementById('font-size-increase-btn');
     const fontDecBtn = document.getElementById('font-size-decrease-btn');
     const favoritesList = document.getElementById('favorites-list');
-    const panelToggleBtn = document.getElementById('panel-toggle-btn');
-    const closePanelBtn = document.getElementById('close-panel-btn'); // New
+    const openPanelBtn = document.getElementById('open-panel-btn'); // Renamed from panelToggleBtn
+    const closePanelBtn = document.getElementById('close-panel-btn'); // New close button
     const controlPanel = document.querySelector('.control-panel');
 
     let currentFontSize = 14;
@@ -232,11 +232,11 @@ document.addEventListener('DOMContentLoaded', () => {
     themeToggleBtn.addEventListener('click', toggleTheme);
     fontIncBtn.addEventListener('click', () => changeFontSize(1));
     fontDecBtn.addEventListener('click', () => changeFontSize(-1));
-    panelToggleBtn.addEventListener('click', () => {
-        controlPanel.classList.remove('hidden'); // Show panel
+    openPanelBtn.addEventListener('click', () => {
+        controlPanel.classList.remove('hidden');
     });
 
-    closePanelBtn.addEventListener('click', () => { // New event listener
+    closePanelBtn.addEventListener('click', () => {
         controlPanel.classList.add('hidden'); // Hide panel
     });
 

@@ -84,14 +84,16 @@ body {
     box-sizing: border-box;
     overflow-y: auto;
     height: 100vh;
-    transition: transform 0.4s ease-in-out; /* Changed to transform */
+    transition: transform 0.4s ease-in-out;
+    transform: translateX(0);
 }
 
 .control-panel.hidden {
-    margin-right: -320px;
+    transform: translateX(100%);
 }
 
-#panel-toggle-btn {
+
+#open-panel-btn {
     background: none;
     border: 1px solid;
     color: inherit;
@@ -100,7 +102,10 @@ body {
     border-radius: 50%;
     cursor: pointer;
     font-size: 1.2em;
-    display: none; /* Hidden by default on desktop */
+    box-sizing: border-box;
+    padding: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease-in-out;
 }
 
 .close-panel-btn {
@@ -115,9 +120,13 @@ body {
     position: absolute;
     top: 20px;
     right: 20px;
-    z-index: 1001; /* Ensure it's above other content in the panel */
-    display: none; /* Hidden by default on desktop */
+    z-index: 1001;
+    box-sizing: border-box;
+    padding: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease-in-out;
 }
+
 
 .control-section {
     margin-bottom: 25px;
@@ -417,29 +426,28 @@ body.light-mode .favorite-btn .fas { color: #f7b928; }
     .control-panel {
         width: 100%;
         height: 100vh;
-        position: fixed;
+        position: fixed; /* Apply fixed position only on mobile */
         top: 0;
         right: 0;
         z-index: 1000;
-        transform: translateX(100%); /* Hidden by default */
-        transition: transform 0.4s ease-in-out;
+        transform: translateX(100%); /* Hidden by default on mobile */
         border-left: none;
         border-top: none;
         box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
     }
 
     .control-panel.hidden {
-        transform: translateX(100%); /* Explicitly hide */
+        transform: translateX(100%); /* Hidden when class is present */
     }
 
     .control-panel:not(.hidden) {
-        transform: translateX(0); /* Explicitly show */
+        transform: translateX(0); /* Show when hidden class is removed */
     }
 
     body.dark-mode .control-panel { background-color: #010409; }
     body.light-mode .control-panel { background-color: #ffffff; }
 
-    #panel-toggle-btn {
+    #open-panel-btn { /* Renamed from panel-toggle-btn */
         display: block; /* Show toggle button on mobile */
         position: absolute; /* Position relative to header */
         right: 15px;
@@ -449,6 +457,22 @@ body.light-mode .favorite-btn .fas { color: #f7b928; }
 
     .close-panel-btn {
         display: block; /* Show close button on mobile when panel is open */
+    }
+}
+
+/* Desktop specific styles */
+@media (min-width: 901px) {
+    .control-panel {
+        display: block;
+        transform: translateX(0);
+        position: relative;
+        left: 0;
+        box-shadow: none;
+        border-left: 1px solid var(--border-color);
+    }
+    #open-panel-btn, 
+    .close-panel-btn {
+        display: block;
     }
 }
 
